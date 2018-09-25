@@ -9,5 +9,5 @@ on a MIDI peripheral (e.g., a MIDI-enabled keyboard or digital piano).
 
 License of use
 ======================================================================
-datastat is provided under the GPLv3 license. See LICENSE.txt for
+midilatency is provided under the GPLv3 license. See LICENSE.txt for
 details.
