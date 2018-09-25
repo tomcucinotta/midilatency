@@ -1,5 +1,5 @@
 midilatency - artificially add latency to MIDI events
-              Copyright 2011-2019 by Tommaso Cucinotta
+              Copyright 2018-2019 by Tommaso Cucinotta
               firstname dot lastname at gmail dot com
 ======================================================================
 This utility has been created to show-case the effect of latency on
