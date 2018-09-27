@@ -1,4 +1,4 @@
-CFLAGS=-O0 -g -pedantic
+CFLAGS=-O0 -g -pedantic -Wno-variadic-macros
 PROG=midilatency
 LDLIBS=-lasound
 

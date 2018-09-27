@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
+#include <unistd.h>
 
-int main (int argc, char *argv[])
-{
+//#define dbg_printf printf
+#define dbg_printf(msg, args...)
+
+int main (int argc, char *argv[]) {
   int err;
   snd_seq_t *seq_handle;
   
@@ -43,6 +46,8 @@ int main (int argc, char *argv[])
     exit(1);
   }
 
+  unsigned long curr_delay_ms = 10;
+  printf("Current delay: %lu ms\n", curr_delay_ms);
   while (1) {
     snd_seq_event_t *ev = NULL;
     unsigned long delay_ms = 0;
@@ -51,37 +56,51 @@ int main (int argc, char *argv[])
       continue;
     }
     if ((ev->type == SND_SEQ_EVENT_NOTEON)||(ev->type == SND_SEQ_EVENT_NOTEOFF)) {
-      if (ev->data.note.note >= 64)
-	delay_ms = 500;
+      if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 73) {
+	if (curr_delay_ms > 5)
+	  curr_delay_ms /= 2;
+	else
+	  curr_delay_ms = 0;
+	printf("Current delay: %lu ms\n", curr_delay_ms);
+      } else if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 75) {
+	if (curr_delay_ms == 0)
+	  curr_delay_ms = 5;
+	else if (curr_delay_ms < 1000)
+	  curr_delay_ms *= 2;
+	printf("Current delay: %lu ms\n", curr_delay_ms);
+      }
+      if (ev->data.note.note >= 60) {
+	delay_ms = curr_delay_ms;
+      }
       const char *type = (ev->type == SND_SEQ_EVENT_NOTEON) ? "on " : "off";
-      printf("[%d] Note %s: %2x vel(%2x)\n", ev->time.tick, type,
+      dbg_printf("[%d] Note %s: %2x vel(%2x)\n", ev->time.tick, type,
 	     ev->data.note.note,
 	     ev->data.note.velocity);
     } else if(ev->type == SND_SEQ_EVENT_CONTROLLER) {
-      printf("[%d] Control:  %2x val(%2x)\n", ev->time.tick,
+      dbg_printf("[%d] Control:  %2x val(%2x)\n", ev->time.tick,
 	     ev->data.control.param,
 	     ev->data.control.value);
     } else if(ev->type == SND_SEQ_EVENT_PGMCHANGE) {
-      printf("[%d] Program change:  %2x val(%2x)\n", ev->time.tick,
+      dbg_printf("[%d] Program change:  %2x val(%2x)\n", ev->time.tick,
 	     ev->data.control.param,
 	     ev->data.control.value);
     } else if(ev->type == SND_SEQ_EVENT_PITCHBEND) {
-      printf("[%d] Pith bend:  %2x val(%2x)\n", ev->time.tick,
+      dbg_printf("[%d] Pith bend:  %2x val(%2x)\n", ev->time.tick,
 	     ev->data.control.param,
 	     ev->data.control.value);
     } else if (ev->type == SND_SEQ_EVENT_CLIENT_START || ev->type == SND_SEQ_EVENT_CLIENT_EXIT || ev->type == SND_SEQ_EVENT_CLIENT_CHANGE) {
-      printf("[%d] Client event: client=%d\n", ev->time.tick, ev->data.addr.client);
+      dbg_printf("[%d] Client event: client=%d\n", ev->time.tick, ev->data.addr.client);
     } else if (ev->type == SND_SEQ_EVENT_PORT_START || ev->type == SND_SEQ_EVENT_PORT_EXIT || ev->type == SND_SEQ_EVENT_PORT_CHANGE) {
-      printf("[%d] Port event: client=%d, port=%d\n", ev->time.tick, ev->data.addr.client, ev->data.addr.port);
+      dbg_printf("[%d] Port event: client=%d, port=%d\n", ev->time.tick, ev->data.addr.client, ev->data.addr.port);
     } else {
-      printf("[%d] Unknown:  Unhandled Event Received\n", ev->time.tick);
+      dbg_printf("[%d] Unknown:  Unhandled Event Received\n", ev->time.tick);
     }
 
     snd_seq_ev_set_source(ev, port_id);
     snd_seq_ev_set_subs(ev);
     struct snd_seq_real_time delta = (struct snd_seq_real_time) {
-      .tv_sec = 0,
-      .tv_nsec = delay_ms * 1000L * 1000L
+      .tv_sec = delay_ms / 1000,
+      .tv_nsec = (delay_ms % 1000L) * 1000L * 1000L
     };
     snd_seq_ev_schedule_real(ev, queue_id, 1, &delta);
     //snd_seq_ev_set_direct(ev);
