@@ -56,13 +56,13 @@ int main (int argc, char *argv[]) {
       continue;
     }
     if ((ev->type == SND_SEQ_EVENT_NOTEON)||(ev->type == SND_SEQ_EVENT_NOTEOFF)) {
-      if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 73) {
+      if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 85) {
 	if (curr_delay_ms > 5)
 	  curr_delay_ms /= 2;
 	else
 	  curr_delay_ms = 0;
 	printf("Current delay: %lu ms\n", curr_delay_ms);
-      } else if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 75) {
+      } else if (ev->type == SND_SEQ_EVENT_NOTEON && ev->data.note.velocity > 0 && ev->data.note.note == 87) {
 	if (curr_delay_ms == 0)
 	  curr_delay_ms = 5;
 	else if (curr_delay_ms < 1000)
